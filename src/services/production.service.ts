@@ -27,7 +27,6 @@ type BatchInput = {
 async function applyStockOnComplete(batchId: string, transaction: import("sequelize").Transaction) {
   const batch = assertFound(
     await ProductionBatch.findByPk(batchId, {
-      include: [{ model: BatchMaterial, as: "materialsUsed" }],
       transaction,
       lock: transaction.LOCK.UPDATE,
     })
@@ -35,7 +34,11 @@ async function applyStockOnComplete(batchId: string, transaction: import("sequel
 
   if (batch.stock_applied) return;
 
-  const materials = (batch as ProductionBatch & { materialsUsed?: BatchMaterial[] }).materialsUsed ?? [];
+  // fetch materials separately
+  const materials = await BatchMaterial.findAll({
+    where: { batch_id: batchId },
+    transaction,
+  });
 
   for (const bm of materials) {
     const material = assertFound(
