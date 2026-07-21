@@ -67,6 +67,12 @@ export class FinanceService {
     return mapExpense(expense);
   }
 
+  async removeExpense(id: string) {
+    const expense = assertFound(await Expense.findByPk(id));
+    await expense.destroy();
+    return { message: "Expense deleted" };
+  }
+
   async listRevenue(q: PaginationQuery) {
     const { rows, count } = await Revenue.findAndCountAll({
       where: { is_active: true },
@@ -89,6 +95,23 @@ export class FinanceService {
       received_date: input.receivedDate,
     });
     return mapRevenue(revenue);
+  }
+
+  async updateRevenue(id: string, input: { saleId: string; amount: number; receivedDate: string }) {
+    const revenue = assertFound(await Revenue.findByPk(id));
+    assertFound(await Sale.findByPk(input.saleId), "Sale not found");
+    await revenue.update({
+      sale_id: input.saleId,
+      amount: input.amount,
+      received_date: input.receivedDate,
+    });
+    return mapRevenue(revenue);
+  }
+
+  async removeRevenue(id: string) {
+    const revenue = assertFound(await Revenue.findByPk(id));
+    await revenue.destroy();
+    return { message: "Revenue record deleted" };
   }
 
   async summary(from?: string, to?: string) {
