@@ -403,6 +403,31 @@ export const createRevenue = async (req: AuthRequest, res: Response, next: NextF
     next(e);
   }
 };
+
+export const deleteExpense = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    ok(res, await financeService.removeExpense(getParamId(req.params.id)));
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const updateRevenue = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    ok(res, { data: await financeService.updateRevenue(getParamId(req.params.id), req.body) });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const deleteRevenue = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    ok(res, await financeService.removeRevenue(getParamId(req.params.id)));
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const financeSummary = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const from = typeof req.query.from === "string" ? req.query.from : undefined;
