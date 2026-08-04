@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/database";
+import { generateSequentialId, sequelize } from "../config/database";
 
 export interface ProductAttributes {
   id: string;
@@ -34,7 +34,7 @@ export class Product extends Model<ProductAttributes, ProductCreation> implement
 
 Product.init(
   {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.STRING(10), primaryKey: true },
     product_name: { type: DataTypes.STRING(150), allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
     price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
@@ -50,3 +50,9 @@ Product.init(
     timestamps: true,
   }
 );
+
+Product.addHook("beforeCreate", async (product: Product) => {
+  if (!product.id) {
+    product.id = await generateSequentialId("P", "product_id_seq");
+  }
+});

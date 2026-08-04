@@ -32,6 +32,18 @@ function buildSequelizeOptions(): Options {
 
 export const sequelize = new Sequelize(env.DATABASE_URL, buildSequelizeOptions());
 
+export async function generateSequentialId(
+  prefix: string,
+  seqName: string,
+  padLength = 4
+): Promise<string> {
+  const [[{ nextval }]] = (await sequelize.query(
+    `SELECT nextval('${seqName}') as nextval`
+  )) as [{ nextval: string }[], unknown];
+ 
+  return `${prefix}-${String(nextval).padStart(padLength, "0")}`;
+}
+
 export async function connectDatabase(): Promise<void> {
   await sequelize.authenticate();
   console.log("Database connection established.");

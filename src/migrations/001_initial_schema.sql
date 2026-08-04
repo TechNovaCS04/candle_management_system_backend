@@ -1,7 +1,33 @@
--- SCMS schema migration (Supabase PostgreSQL)
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE IF NOT EXISTS users (
+DROP TABLE IF EXISTS revenue CASCADE;
+DROP TABLE IF EXISTS product_sale_details CASCADE;
+DROP TABLE IF EXISTS sales CASCADE;
+DROP TABLE IF EXISTS batch_materials CASCADE;
+DROP TABLE IF EXISTS production_batches CASCADE;
+DROP TABLE IF EXISTS raw_materials CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS suppliers CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS attendance CASCADE;
+DROP TABLE IF EXISTS employees CASCADE;
+DROP TABLE IF EXISTS expenses CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+DROP SEQUENCE IF EXISTS employee_id_seq;
+DROP SEQUENCE IF EXISTS revenue_id_seq;
+DROP SEQUENCE IF EXISTS customer_id_seq;
+DROP SEQUENCE IF EXISTS product_id_seq;
+DROP SEQUENCE IF EXISTS sale_id_seq;
+
+-- Sequences that back the sequential prefixed IDs
+CREATE SEQUENCE employee_id_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE revenue_id_seq  START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE customer_id_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE product_id_seq  START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE sale_id_seq     START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(150) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
@@ -10,8 +36,9 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS employees (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- employees  ->  EMP-0001
+CREATE TABLE employees (
+  id VARCHAR(10) PRIMARY KEY DEFAULT ('EMP-' || LPAD(nextval('employee_id_seq')::text, 4, '0')),
   name VARCHAR(150) NOT NULL,
   contact_no VARCHAR(50) NOT NULL,
   email_address VARCHAR(255),
@@ -25,9 +52,9 @@ CREATE TABLE IF NOT EXISTS employees (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS attendance (
+CREATE TABLE attendance (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+  employee_id VARCHAR(10) NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   status VARCHAR(20) NOT NULL
     CHECK (status IN ('PRESENT', 'ABSENT', 'LEAVE', 'HALF_DAY')),
@@ -36,7 +63,8 @@ CREATE TABLE IF NOT EXISTS attendance (
   UNIQUE (employee_id, date)
 );
 
-CREATE TABLE IF NOT EXISTS suppliers (
+
+CREATE TABLE suppliers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(150) NOT NULL,
   contact_no VARCHAR(50) NOT NULL,
@@ -47,7 +75,7 @@ CREATE TABLE IF NOT EXISTS suppliers (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS raw_materials (
+CREATE TABLE raw_materials (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   supplier_id UUID NOT NULL REFERENCES suppliers(id),
   material_name VARCHAR(150) NOT NULL,
@@ -59,8 +87,9 @@ CREATE TABLE IF NOT EXISTS raw_materials (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS products (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- products  ->  P-0001
+CREATE TABLE products (
+  id VARCHAR(10) PRIMARY KEY DEFAULT ('P-' || LPAD(nextval('product_id_seq')::text, 4, '0')),
   product_name VARCHAR(150) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   price NUMERIC(12, 2) NOT NULL,
@@ -72,9 +101,9 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS production_batches (
+CREATE TABLE production_batches (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id UUID NOT NULL REFERENCES products(id),
+  product_id VARCHAR(10) NOT NULL REFERENCES products(id),
   production_date DATE NOT NULL,
   produced_qty INTEGER NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'PLANNED'
@@ -84,7 +113,7 @@ CREATE TABLE IF NOT EXISTS production_batches (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS batch_materials (
+CREATE TABLE batch_materials (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   batch_id UUID NOT NULL REFERENCES production_batches(id) ON DELETE CASCADE,
   material_id UUID NOT NULL REFERENCES raw_materials(id),
@@ -92,8 +121,9 @@ CREATE TABLE IF NOT EXISTS batch_materials (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS customers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- customers  ->  C-0001
+CREATE TABLE customers (
+  id VARCHAR(10) PRIMARY KEY DEFAULT ('C-' || LPAD(nextval('customer_id_seq')::text, 4, '0')),
   name VARCHAR(150) NOT NULL,
   contact_no VARCHAR(50) NOT NULL,
   email_address VARCHAR(255) NOT NULL,
@@ -103,9 +133,10 @@ CREATE TABLE IF NOT EXISTS customers (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS sales (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_id UUID NOT NULL REFERENCES customers(id),
+-- sales  ->  O-0001  (O for "Order")
+CREATE TABLE sales (
+  id VARCHAR(10) PRIMARY KEY DEFAULT ('O-' || LPAD(nextval('sale_id_seq')::text, 4, '0')),
+  customer_id VARCHAR(10) NOT NULL REFERENCES customers(id),
   sale_date DATE NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
     CHECK (status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED')),
@@ -113,25 +144,26 @@ CREATE TABLE IF NOT EXISTS sales (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS product_sale_details (
+CREATE TABLE product_sale_details (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
-  product_id UUID NOT NULL REFERENCES products(id),
+  sale_id VARCHAR(10) NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
+  product_id VARCHAR(10) NOT NULL REFERENCES products(id),
   buy_qty INTEGER NOT NULL,
   unit_price NUMERIC(12, 2) NOT NULL,
   total_amount NUMERIC(12, 2) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS revenue (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sale_id UUID NOT NULL REFERENCES sales(id),
+-- revenue  ->  REV-0001
+CREATE TABLE revenue (
+  id VARCHAR(10) PRIMARY KEY DEFAULT ('REV-' || LPAD(nextval('revenue_id_seq')::text, 4, '0')),
+  sale_id VARCHAR(10) NOT NULL REFERENCES sales(id),
   amount NUMERIC(12, 2) NOT NULL,
   received_date DATE NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS expenses (
+CREATE TABLE expenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   description TEXT NOT NULL,
   amount NUMERIC(12, 2) NOT NULL,

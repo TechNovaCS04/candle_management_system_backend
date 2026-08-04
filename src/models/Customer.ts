@@ -1,8 +1,9 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
+import { generateSequentialId } from "../config/database";
 
 export interface CustomerAttributes {
-  id: string;
+  id: string; // "C-0001" style
   name: string;
   contact_no: string;
   email_address: string;
@@ -27,7 +28,7 @@ export class Customer extends Model<CustomerAttributes, CustomerCreation> implem
 
 Customer.init(
   {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.STRING(10), primaryKey: true },
     name: { type: DataTypes.STRING(150), allowNull: false },
     contact_no: { type: DataTypes.STRING(50), allowNull: false },
     email_address: { type: DataTypes.STRING(255), allowNull: false },
@@ -41,3 +42,10 @@ Customer.init(
     timestamps: true,
   }
 );
+
+
+Customer.addHook("beforeCreate", async (customer: Customer) => {
+  if (!customer.id) {
+    customer.id = await generateSequentialId("C", "customer_id_seq");
+  }
+});

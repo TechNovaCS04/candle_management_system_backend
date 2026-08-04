@@ -29,7 +29,7 @@ export class Attendance
 Attendance.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    employee_id: { type: DataTypes.UUID, allowNull: false },
+    employee_id: { type: DataTypes.STRING(10), allowNull: false },
     date: { type: DataTypes.DATEONLY, allowNull: false },
     status: {
       type: DataTypes.ENUM("PRESENT", "ABSENT", "LEAVE", "HALF_DAY"),

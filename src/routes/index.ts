@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Router } from "express";
 import * as c from "../controllers/modules.controller";
 import { validateBody } from "../middleware/validate.middleware";
 import {
@@ -83,11 +83,14 @@ router.delete("/attendance/:id", c.deleteAttendance);
 router.get("/revenue", c.listRevenue);
 router.post("/revenue", validateBody(revenueSchema), c.createRevenue);
 router.get("/revenue/:id", c.getRevenue);
+router.put("/revenue/:id", validateBody(revenueSchema), c.updateRevenue);
+router.delete("/revenue/:id", c.deleteRevenue);
 
 router.get("/expenses", c.listExpenses);
 router.post("/expenses", validateBody(expenseSchema), c.createExpense);
 router.get("/expenses/:id", c.getExpense);
 router.put("/expenses/:id", validateBody(expenseSchema), c.updateExpense);
+router.delete("/expenses/:id", c.deleteExpense);
 
 router.get("/finance/summary", c.financeSummary);
 

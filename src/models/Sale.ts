@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/database";
+import { generateSequentialId, sequelize } from "../config/database";
 
 export type SaleStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELLED";
 
@@ -25,8 +25,8 @@ export class Sale extends Model<SaleAttributes, SaleCreation> implements SaleAtt
 
 Sale.init(
   {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    customer_id: { type: DataTypes.UUID, allowNull: false },
+    id: { type: DataTypes.STRING(10), primaryKey: true },
+    customer_id: { type: DataTypes.STRING(10), allowNull: false },
     sale_date: { type: DataTypes.DATEONLY, allowNull: false },
     status: {
       type: DataTypes.ENUM("PENDING", "PROCESSING", "COMPLETED", "CANCELLED"),
@@ -43,3 +43,9 @@ Sale.init(
     updatedAt: false,
   }
 );
+
+Sale.addHook("beforeCreate", async (sale: Sale) => {
+  if (!sale.id) {
+    sale.id = await generateSequentialId("O", "sale_id_seq");
+  }
+});

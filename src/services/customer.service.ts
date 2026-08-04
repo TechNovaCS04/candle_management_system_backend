@@ -22,7 +22,7 @@ export class CustomerService {
       where,
       limit: q.pageSize,
       offset: q.offset,
-      order: [["created_at", "DESC"]],
+      order: [["created_at", "ASC"]],
     });
 
     const mapped = await Promise.all(

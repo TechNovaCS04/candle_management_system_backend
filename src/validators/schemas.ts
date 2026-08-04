@@ -46,7 +46,7 @@ export const batchMaterialSchema = z.object({
 });
 
 export const batchSchema = z.object({
-  productId: z.string().uuid(),
+  productId: z.string().min(1),
   productionDate: z.string().min(1),
   quantityProduced: z.number().int().positive(),
   status: z.enum(["PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).default("PLANNED"),
@@ -61,13 +61,13 @@ export const customerSchema = z.object({
 });
 
 export const saleItemSchema = z.object({
-  productId: z.string().uuid(),
+  productId: z.string().min(1),
   quantity: z.number().int().positive(),
   unitPrice: z.number().min(0),
 });
 
 export const saleSchema = z.object({
-  customerId: z.string().uuid(),
+  customerId: z.string().min(1),
   saleDate: z.string().min(1),
   status: z.enum(["PENDING", "PROCESSING", "COMPLETED", "CANCELLED"]).default("PENDING"),
   items: z.array(saleItemSchema).min(1),
@@ -84,7 +84,7 @@ export const employeeSchema = z.object({
 });
 
 export const attendanceSchema = z.object({
-  employeeId: z.string().uuid(),
+  employeeId: z.string().min(1),
   date: z.string().min(1),
   status: z.enum(["PRESENT", "ABSENT", "LEAVE", "HALF_DAY"]),
 });
@@ -97,7 +97,7 @@ export const expenseSchema = z.object({
 });
 
 export const revenueSchema = z.object({
-  saleId: z.string().uuid(),
+  saleId: z.string().min(1),
   amount: z.number().positive(),
   receivedDate: z.string().min(1),
 });

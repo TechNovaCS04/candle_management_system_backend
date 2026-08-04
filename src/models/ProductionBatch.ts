@@ -36,7 +36,7 @@ export class ProductionBatch
 ProductionBatch.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    product_id: { type: DataTypes.UUID, allowNull: false },
+    product_id: { type: DataTypes.STRING(10), allowNull: false },
     production_date: { type: DataTypes.DATEONLY, allowNull: false },
     produced_qty: { type: DataTypes.INTEGER, allowNull: false },
     status: {
