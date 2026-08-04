@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/database";
+import { generateSequentialId, sequelize } from "../config/database";
 
 export type EmployeePosition =
   | "MANAGER"
@@ -43,7 +43,7 @@ export class Employee extends Model<EmployeeAttributes, EmployeeCreation> implem
 
 Employee.init(
   {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.STRING(10), primaryKey: true },
     name: { type: DataTypes.STRING(150), allowNull: false },
     contact_no: { type: DataTypes.STRING(50), allowNull: false },
     email_address: { type: DataTypes.STRING(255), allowNull: true },
@@ -64,3 +64,9 @@ Employee.init(
     timestamps: true,
   }
 );
+
+Employee.addHook("beforeCreate", async (employee: Employee) => {
+  if (!employee.id) {
+    employee.id = await generateSequentialId("EMP", "employee_id_seq");
+  }
+});

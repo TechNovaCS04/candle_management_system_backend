@@ -1,5 +1,6 @@
 import { Op, WhereOptions } from "sequelize";
 import {
+  Customer,
   Expense,
   Product,
   ProductionBatch,
@@ -143,6 +144,8 @@ export class DashboardService {
       totalRevenue,
       totalExpenses,
       completedSalesCount,
+      pendingOrdersCount,   
+      totalCustomers,
       lowStockMaterials,
     ] = await Promise.all([
       Product.count({ where: { is_active: true } }),
@@ -161,6 +164,8 @@ export class DashboardService {
       Revenue.sum("amount", { where: { is_active: true } }),
       Expense.sum("amount", { where: { is_active: true } }),
       Sale.count({ where: { status: "COMPLETED" } }),
+      Sale.count({ where: { status: { [Op.in]: ["PENDING", "PROCESSING"] } } }),
+      Customer.count(),
       RawMaterial.findAll({
         where: { is_active: true },
         include: [{ model: Supplier, as: "supplier" }],
@@ -178,6 +183,7 @@ export class DashboardService {
       lowStockCount: materials.filter((m) => Number(m.stock_qty) <= Number(m.reorder_level)).length,
       openBatches,
       completedSalesCount,
+      pendingOrdersCount,
       totalRevenue: revenue,
       totalExpenses: expenses,
       profit: revenue - expenses,

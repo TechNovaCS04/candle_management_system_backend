@@ -1,9 +1,8 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../config/database";
-
+import { generateSequentialId,sequelize } from "../config/database";
 export interface RevenueAttributes {
-  id: string;
-  sale_id: string;
+  id: string; 
+  sale_id: string; 
   amount: number;
   received_date: string;
   is_active: boolean;
@@ -23,8 +22,8 @@ export class Revenue extends Model<RevenueAttributes, RevenueCreation> implement
 
 Revenue.init(
   {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    sale_id: { type: DataTypes.UUID, allowNull: false },
+    id: { type: DataTypes.STRING(10), primaryKey: true },
+    sale_id: { type: DataTypes.STRING(10), allowNull: false },
     amount: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
     received_date: { type: DataTypes.DATEONLY, allowNull: false },
     is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
@@ -37,3 +36,9 @@ Revenue.init(
     updatedAt: false,
   }
 );
+
+Revenue.addHook("beforeCreate", async (revenue: Revenue) => {
+  if (!revenue.id) {
+    revenue.id = await generateSequentialId("REV", "revenue_id_seq");
+  }
+});

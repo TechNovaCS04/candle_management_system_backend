@@ -27,7 +27,7 @@ export class ProductSaleDetail
 ProductSaleDetail.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    sale_id: { type: DataTypes.UUID, allowNull: false },
+    sale_id: { type: DataTypes.STRING(10), allowNull: false },
     product_id: { type: DataTypes.UUID, allowNull: false },
     buy_qty: { type: DataTypes.INTEGER, allowNull: false },
     unit_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
