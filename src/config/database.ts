@@ -5,11 +5,31 @@ function usesSupabase(databaseUrl: string): boolean {
   return databaseUrl.includes("supabase");
 }
 
-function buildSequelizeOptions(): Options {
+/**
+ * Parse a postgres connection URI into Sequelize constructor args.
+ * Avoids Sequelize treating non-postgres schemes (e.g. https://) as dialects.
+ */
+function parseDatabaseUrl(databaseUrl: string) {
+  const url = new URL(databaseUrl);
+  const database = url.pathname.replace(/^\//, "") || "postgres";
+  const port = url.port ? Number(url.port) : 5432;
+
+  return {
+    database,
+    username: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    host: url.hostname,
+    port,
+  };
+}
+
+function buildSequelizeOptions(host: string, port: number): Options {
   const isSupabase = usesSupabase(env.DATABASE_URL);
   const requireSsl = env.NODE_ENV === "production" || isSupabase;
 
   return {
+    host,
+    port,
     dialect: "postgres",
     logging: env.NODE_ENV === "development" ? console.log : false,
     dialectOptions: requireSsl
@@ -20,7 +40,6 @@ function buildSequelizeOptions(): Options {
           },
         }
       : {},
-    // Conservative pool for Supabase PgBouncer (transaction / session pooler)
     pool: {
       max: isSupabase ? 5 : 10,
       min: 0,
@@ -30,7 +49,14 @@ function buildSequelizeOptions(): Options {
   };
 }
 
-export const sequelize = new Sequelize(env.DATABASE_URL, buildSequelizeOptions());
+const { database, username, password, host, port } = parseDatabaseUrl(env.DATABASE_URL);
+
+export const sequelize = new Sequelize(
+  database,
+  username,
+  password,
+  buildSequelizeOptions(host, port)
+);
 
 export async function generateSequentialId(
   prefix: string,
@@ -40,7 +66,7 @@ export async function generateSequentialId(
   const [[{ nextval }]] = (await sequelize.query(
     `SELECT nextval('${seqName}') as nextval`
   )) as [{ nextval: string }[], unknown];
- 
+
   return `${prefix}-${String(nextval).padStart(padLength, "0")}`;
 }
 
