@@ -55,8 +55,8 @@ export class FinanceService {
   }
 
   async updateExpense(
-    id: string,
-    input: { description: string; amount: number; expenseDate: string; category?: string }
+      id: string,
+      input: { description: string; amount: number; expenseDate: string; category?: string }
   ) {
     const expense = assertFound(await Expense.findByPk(id));
     await expense.update({
@@ -144,7 +144,9 @@ export class DashboardService {
       totalRevenue,
       totalExpenses,
       completedSalesCount,
-      pendingOrdersCount,   
+      pendingOrdersCount,
+      pendingCount,
+      processingCount,
       totalCustomers,
       lowStockMaterials,
     ] = await Promise.all([
@@ -165,6 +167,10 @@ export class DashboardService {
       Expense.sum("amount", { where: { is_active: true } }),
       Sale.count({ where: { status: "COMPLETED" } }),
       Sale.count({ where: { status: { [Op.in]: ["PENDING", "PROCESSING"] } } }),
+      // Split counts for the Order Status pie chart (Active Orders card
+      // keeps using the combined pendingOrdersCount above).
+      Sale.count({ where: { status: "PENDING" } }),
+      Sale.count({ where: { status: "PROCESSING" } }),
       Customer.count(),
       RawMaterial.findAll({
         where: { is_active: true },
@@ -173,7 +179,7 @@ export class DashboardService {
     ]);
 
     const lowStock = lowStockMaterials.filter(
-      (m) => Number(m.stock_qty) <= Number(m.reorder_level)
+        (m) => Number(m.stock_qty) <= Number(m.reorder_level)
     );
     const revenue = Number(totalRevenue || 0);
     const expenses = Number(totalExpenses || 0);
@@ -184,6 +190,9 @@ export class DashboardService {
       openBatches,
       completedSalesCount,
       pendingOrdersCount,
+      pendingCount,
+      processingCount,
+      totalCustomers, // was computed but never included in the return - now fixed
       totalRevenue: revenue,
       totalExpenses: expenses,
       profit: revenue - expenses,
