@@ -26,7 +26,6 @@ type SaleInput = {
 async function applySaleCompletion(saleId: string, transaction: import("sequelize").Transaction) {
   const sale = assertFound(
     await Sale.findByPk(saleId, {
-      include: [{ model: ProductSaleDetail, as: "items" }],
       transaction,
       lock: transaction.LOCK.UPDATE,
     })
@@ -34,7 +33,11 @@ async function applySaleCompletion(saleId: string, transaction: import("sequeliz
 
   if (sale.stock_applied) return;
 
-  const items = (sale as Sale & { items?: ProductSaleDetail[] }).items ?? [];
+  const items = await ProductSaleDetail.findAll({
+    where: { sale_id: saleId },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
   let total = 0;
 
   for (const item of items) {
